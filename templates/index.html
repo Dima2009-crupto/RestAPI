@@ -3,28 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style.css">
-    <title>Cartoon Favorites</title>
+    <title>To-Do List</title>
+    <script>
+        // Завантаження завдань
+        async function loadTasks() {
+            const response = await fetch('/tasks');
+            const tasks = await response.json();
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.textContent = task.description;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteTask(task.id);
+                li.appendChild(deleteButton);
+                taskList.appendChild(li);
+            });
+        }
+
+        // Додавання нового завдання
+        async function addTask(event) {
+            event.preventDefault();
+            const description = document.getElementById('description').value;
+            await fetch('/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description })
+            });
+            document.getElementById('task-form').reset();
+            loadTasks();
+        }
+
+        // Видалення завдання
+        async function deleteTask(taskId) {
+            await fetch(`/tasks/${taskId}`, { method: 'DELETE' });
+            loadTasks();
+        }
+
+        // Завантаження завдань при завантаженні сторінки
+        document.addEventListener('DOMContentLoaded', loadTasks);
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>My Favorite Cartoons</h1>
-        
-        
-        <form method="POST" action="/">
-            <input type="text" name="name" placeholder="Cartoon Name" required>
-            <input type="text" name="genre" placeholder="Genre" required>
-            <button type="submit">Add Cartoon</button>
-        </form>
-
-        
-        <ul class="cartoon-list">
-            {% for cartoon in cartoons %}
-                <li>
-                    <strong>{{ cartoon[1] }}</strong> - {{ cartoon[2] }}
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+    <h1>To-Do List</h1>
+    <form id="task-form" onsubmit="addTask(event)">
+        <input type="text" id="description" placeholder="Task description" required>
+        <button type="submit">Add Task</button>
+    </form>
+    <ul id="task-list"></ul>
 </body>
 </html>
